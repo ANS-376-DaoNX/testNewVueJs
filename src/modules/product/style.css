@@ -1,0 +1,40 @@
+.product-master {
+  width: 100%;
+}
+
+.card {
+  border: 0;
+  margin-bottom: 1rem;
+  border-radius: 0.375rem;
+}
+
+.card-header {
+  border-bottom: 0;
+  border-radius: 0.375rem 0.375rem 0 0 !important;
+}
+
+.card-header.bg-primary {
+  background-color: #0d6efd !important;
+  color: white !important;
+}
+
+.form-label.bg-warning {
+  background-color: #fff3cd !important;
+  border-radius: 0.25rem;
+  padding: 0.5rem !important;
+  margin-bottom: 0;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem;
+  vertical-align: middle;
+}
+
+.row.mb-3 {
+  align-items: center;
+}
