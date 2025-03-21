@@ -40,23 +40,28 @@
   </div>
 </template>
 
-<script>
-  export default {
-    name: 'LoginTemplate',
-    props: {
-      username: {
-        type: String,
-        required: true
-      },
-      password: {
-        type: String,
-        required: true
-      },
-      errorMessage: {
-        type: String,
-        default: ''
-      }
+<script setup>
+  import { defineProps, defineEmits, defineOptions } from 'vue'
+
+  // Định nghĩa tên component
+  defineOptions({
+    name: 'LoginTemplate'
+  })
+
+  defineProps({
+    username: {
+      type: String,
+      required: true
     },
-    emits: ['update:username', 'update:password', 'login']
-  }
+    password: {
+      type: String,
+      required: true
+    },
+    errorMessage: {
+      type: String,
+      default: ''
+    }
+  })
+
+  defineEmits(['update:username', 'update:password', 'login'])
 </script>

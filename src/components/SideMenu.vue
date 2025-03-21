@@ -25,10 +25,13 @@
   </div>
 </template>
 
-<script>
-  export default {
+<script setup>
+  import { defineOptions } from 'vue'
+
+  // Định nghĩa tên component
+  defineOptions({
     name: 'SideMenu'
-  }
+  })
 </script>
 
 <style scoped>

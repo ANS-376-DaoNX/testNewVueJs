@@ -13,14 +13,23 @@
                   <FormLabel>JANCD</FormLabel>
                 </div>
                 <div class="col-md-4">
-                  <NumberInput
-                    :model-value="searchForm.janCode"
-                    @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, janCode: value })"
-                    placeholder="9090909090909"
-                    :maxLength="13"
-                    :allow-decimal="false"
-                    :allow-negative="false"
-                  />
+                  <div class="input-group">
+                    <SearchInput
+                      :model-value="searchForm.janCd"
+                      @update:model-value="
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, janCd: value })
+                          $emit('clear-field-error', 'janCd')
+                        }
+                      "
+                      :items="janCodeList"
+                      popup-title="JAN検索"
+                      @search="(keyword) => $emit('search-by-jan-cd', keyword)"
+                      @select="(item) => $emit('select-jan-code', item)"
+                      :error="fieldErrors.janCd && fieldErrors.janCd[0]"
+                    />
+                    <input type="text" class="form-control" :value="searchForm.janCdName" disabled />
+                  </div>
                 </div>
                 <div class="col-md-6"></div>
               </div>
@@ -32,7 +41,13 @@
                 <div class="col-md-4">
                   <BaseInput
                     :model-value="searchForm.companyCd"
-                    @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, companyCd: value })"
+                    @update:model-value="
+                      (value) => {
+                        $emit('update:searchForm', { ...searchForm, companyCd: value })
+                        $emit('clear-field-error', 'companyCd')
+                      }
+                    "
+                    :error="fieldErrors.companyCd && fieldErrors.companyCd[0]"
                   />
                 </div>
                 <div class="col-md-6"></div>
@@ -45,8 +60,14 @@
                 <div class="col-md-10">
                   <BaseInput
                     :model-value="searchForm.productName"
-                    @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, productName: value })"
+                    @update:model-value="
+                      (value) => {
+                        $emit('update:searchForm', { ...searchForm, productName: value })
+                        $emit('clear-field-error', 'productName')
+                      }
+                    "
                     placeholder="テスト商品"
+                    :error="fieldErrors.productName && fieldErrors.productName[0]"
                   />
                 </div>
               </div>
@@ -61,6 +82,7 @@
                     @update:model-value="
                       (value) => $emit('update:searchForm', { ...searchForm, productNameKana: value })
                     "
+                    :error="fieldErrors.productNameKana && fieldErrors.productNameKana[0]"
                   />
                 </div>
               </div>
@@ -128,11 +150,17 @@
                   <div class="input-group">
                     <SearchInput
                       :model-value="searchForm.unit"
-                      @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, unit: value })"
+                      @update:model-value="
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, unit: value })
+                          $emit('clear-field-error', 'unit')
+                        }
+                      "
                       :items="unitList"
                       popup-title="単位検索"
                       @search="(keyword) => $emit('search-unit', keyword)"
                       @select="(item) => $emit('select-unit', item)"
+                      :error="fieldErrors.unit && fieldErrors.unit[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.unitName" disabled />
                   </div>
@@ -155,6 +183,7 @@
                       popup-title="発注先検索"
                       @search="(keyword) => $emit('search-weight-order-place', keyword)"
                       @select="(item) => $emit('select-weight-order-place', item)"
+                      :error="fieldErrors.weightOrderPlace && fieldErrors.weightOrderPlace[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.weightOrderPlaceName" disabled />
                   </div>
@@ -170,11 +199,17 @@
                   <div class="input-group">
                     <SearchInput
                       :model-value="searchForm.makerCd"
-                      @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, makerCd: value })"
+                      @update:model-value="
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, makerCd: value })
+                          $emit('clear-field-error', 'makerCd')
+                        }
+                      "
                       :items="makerList"
                       popup-title="メーカー検索"
                       @search="(keyword) => $emit('search-maker-cd', keyword)"
                       @select="(item) => $emit('select-maker', item)"
+                      :error="fieldErrors.makerCd && fieldErrors.makerCd[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.makerName" disabled />
                   </div>
@@ -225,6 +260,7 @@
                       popup-title="基本帳合検索"
                       @search="(keyword) => $emit('search-weight-standard-cd', keyword)"
                       @select="(item) => $emit('select-weight-standard', item)"
+                      :error="fieldErrors.weightStandardCd && fieldErrors.weightStandardCd[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.weightStandardName" disabled />
                   </div>
@@ -335,9 +371,11 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-end">
+        <div class="card-footer d-flex justify-content-end">
+          <button class="btn btn-secondary me-2" @click="closeForm">
+            <i class="bi bi-x-circle me-1"></i>キャンセル
+          </button>
           <button class="btn btn-primary me-2" @click="saveProduct"><i class="bi bi-save me-1"></i>登録</button>
-          <button class="btn btn-secondary" @click="closeForm"><i class="bi bi-x-circle me-1"></i>CLOSE</button>
         </div>
       </div>
     </div>
@@ -358,23 +396,23 @@
     },
     products: {
       type: Array,
-      default: () => []
+      required: true
     },
     currentProduct: {
       type: Object,
-      default: () => ({})
+      required: true
     },
     isEditing: {
       type: Boolean,
-      default: false
+      required: true
     },
     currentPage: {
       type: Number,
-      default: 1
+      required: true
     },
     totalPages: {
       type: Number,
-      default: 1
+      required: true
     },
     unitList: {
       type: Array,
@@ -403,12 +441,23 @@
     customerPrices: {
       type: Array,
       default: () => []
+    },
+    fieldErrors: {
+      type: Object,
+      default: () => ({})
     }
   })
 
   const emit = defineEmits([
     'update:searchForm',
-    'search-by-jan-cd',
+    'search-products',
+    'reset-form',
+    'show-add-modal',
+    'edit-product',
+    'save-product',
+    'delete-product',
+    'change-page',
+    // Search popup events
     'search-unit',
     'select-unit',
     'search-weight-order-place',
@@ -417,9 +466,11 @@
     'select-maker',
     'search-weight-standard-cd',
     'select-weight-standard',
+    'search-by-jan-cd',
+    'select-jan-code',
     'view-customer-details',
-    'save-product',
-    'close-form'
+    'close-form',
+    'clear-field-error'
   ])
 
   const viewCustomerDetails = (code) => {

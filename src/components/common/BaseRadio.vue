@@ -1,17 +1,20 @@
 <template>
-  <div class="input-wrapper">
-    <input
-      :type="type"
-      class="form-control"
-      :class="{ 'form-error': error }"
-      :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
-      @focus="showTooltipOnFocus"
-      @blur="hideTooltip"
-      :placeholder="placeholder"
-      :disabled="disabled"
-      ref="inputElement"
-    />
+  <div class="radio-wrapper">
+    <div class="form-check">
+      <input
+        type="radio"
+        class="form-check-input"
+        :class="{ 'form-error': error }"
+        :id="id"
+        :name="name"
+        :value="value"
+        :checked="modelValue === value"
+        @change="$emit('update:modelValue', value)"
+        :disabled="disabled"
+        ref="inputElement"
+      />
+      <label class="form-check-label" :for="id">{{ label }}</label>
+    </div>
     <div v-if="error" ref="tooltip" class="error-tooltip">
       {{ error }}
       <div class="tooltip-arrow"></div>
@@ -24,14 +27,22 @@
 
   const props = defineProps({
     modelValue: {
-      type: [String, Number],
+      type: [String, Number, Boolean],
       default: ''
     },
-    type: {
-      type: String,
-      default: 'text'
+    value: {
+      type: [String, Number, Boolean],
+      required: true
     },
-    placeholder: {
+    id: {
+      type: String,
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    label: {
       type: String,
       default: ''
     },
@@ -75,7 +86,7 @@
   watch(
     () => props.error,
     () => {
-      // Không làm gì khi error thay đổi, để các sự kiện mouse/focus xử lý hiển thị tooltip
+      // The tooltip visibility is handled by mouse/focus events
     }
   )
 
@@ -83,19 +94,20 @@
     if (inputElement.value) {
       inputElement.value.addEventListener('mouseenter', showTooltip)
       inputElement.value.addEventListener('mouseleave', hideTooltip)
+      inputElement.value.addEventListener('focus', showTooltipOnFocus)
+      inputElement.value.addEventListener('blur', hideTooltip)
     }
   })
 </script>
 
 <style scoped>
-  .input-wrapper {
-    width: 100%;
+  .radio-wrapper {
     position: relative;
+    display: inline-block;
   }
 
   .form-error {
     border-color: #dc3545;
-    background-image: none;
   }
 
   .form-error:focus {

@@ -2,7 +2,6 @@
   <ProductTemplate
     v-model:searchForm="searchForm"
     :products="products"
-    :current-product="currentProduct"
     :is-editing="isEditing"
     :current-page="currentPage"
     :total-pages="totalPages"
@@ -13,6 +12,7 @@
     :jan-code-list="janCodeList"
     :delivery-group-list="deliveryGroupList"
     :customer-prices="customerPrices"
+    :field-errors="fieldErrors"
     @search-products="searchProductsHandler"
     @reset-form="resetForm"
     @search-unit="searchUnit"
@@ -25,6 +25,8 @@
     @select-weight-order-place="selectWeightOrderPlace"
     @select-maker="selectMaker"
     @select-weight-standard="selectWeightStandard"
+    @save-product="saveProductHandler"
+    @clear-field-error="clearFieldError"
   />
 </template>
 
@@ -40,10 +42,14 @@
     searchProducts,
     searchJanCodes
   } from '@/services/masterDataService'
+  import { useValidation } from '@/composables/useValidation'
 
   defineComponent({
     name: 'ProductMaster'
   })
+
+  // Use validation composable
+  const { validate, fieldErrors, clearErrors, clearFieldError } = useValidation()
 
   // State
   const searchForm = ref({
@@ -72,7 +78,6 @@
   })
 
   const products = ref([])
-  const currentProduct = ref({})
   const isEditing = ref(false)
   const currentPage = ref(1)
   const totalPages = ref(1)
@@ -97,84 +102,101 @@
   ])
   const customerPrices = ref([
     { code: '2001', name: 'イオン株式会社', price: '100', trend: 'up' },
-    { code: '2002', name: 'セブン-イレブン・ジャパン', price: '90', trend: 'down' },
-    { code: '2003', name: 'ローソン', price: '95', trend: '' }
+    { code: '2002', name: 'セブン＆アイ・ホールディングス', price: '200', trend: 'down' },
+    { code: '2003', name: 'ファミリーマート', price: '150', trend: 'up' },
+    { code: '2004', name: '株式会社ヨドバシカメラ', price: '300', trend: 'stable' },
+    { code: '2005', name: '楽天株式会社', price: '180', trend: 'up' }
   ])
 
-  // Methods
-  const searchUnit = async (keyword) => {
-    console.log('Searching units with keyword:', keyword)
-    unitList.value = await searchUnits(keyword || '')
-    console.log('Unit list updated:', unitList.value)
+  // Validation schema for product form
+  const productValidationSchema = {
+    janCd: [
+      { rule: 'required', message: 'JANCDは必須項目です' },
+      { rule: 'pattern', params: /^\d{13}$/, message: 'JANCDは13桁の数字で入力してください' }
+    ],
+    companyCd: [
+      { rule: 'required', message: '自社CDは必須項目です' },
+      { rule: 'maxLength', params: { max: 10 }, message: '自社CDは10文字以内で入力してください' }
+    ],
+    productName: [
+      { rule: 'required', message: '商品名は必須項目です' },
+      { rule: 'maxLength', params: { max: 100 }, message: '商品名は100文字以内で入力してください' }
+    ],
+    productNameKana: [
+      { rule: 'maxLength', params: { max: 100 }, message: '商品名カナは100文字以内で入力してください' }
+    ],
+    productShortName: [{ rule: 'maxLength', params: { max: 50 }, message: '商品略称は50文字以内で入力してください' }],
+    specification: [{ rule: 'maxLength', params: { max: 100 }, message: '規格は100文字以内で入力してください' }],
+    expiryDate: [{ rule: 'pattern', params: /^\d*$/, message: '賞味期限は数字で入力してください' }],
+    weightQuantity: [{ rule: 'pattern', params: /^\d*(\.\d{1,2})?$/, message: '重量は数値で入力してください' }],
+    unit: [{ rule: 'required', message: '単位は必須項目です' }],
+    makerCd: [{ rule: 'required', message: 'メーカーCDは必須項目です' }]
   }
 
-  const searchOrderPlace = async (keyword) => {
-    console.log('Searching order places with keyword:', keyword)
-    weightOrderPlaceList.value = await searchOrderPlaces(keyword || '')
-    console.log('Weight order place list updated:', weightOrderPlaceList.value)
-  }
-
-  const searchMaker = async (keyword) => {
-    console.log('Searching makers with keyword:', keyword)
-    makerList.value = await searchMakers(keyword || '')
-    console.log('Maker list updated:', makerList.value)
-  }
-
-  const searchWeightStandard = async (keyword) => {
-    console.log('Searching weight standards with keyword:', keyword)
-    weightStandardList.value = await searchWeightStandards(keyword || '')
-    console.log('Weight standard list updated:', weightStandardList.value)
-  }
-
+  // Search functions
   const searchProductsHandler = async () => {
-    console.log('Searching products with form:', searchForm.value)
-    products.value = await searchProducts(searchForm.value)
-    console.log('Products updated:', products.value)
-  }
-
-  const resetForm = () => {
-    searchForm.value = {
-      janCd: '',
-      janCdName: '',
-      companyCd: '',
-      productName: '',
-      productNameKana: '',
-      productShortName: '',
-      specification: '',
-      expiryDate: '',
-      weightQuantity: '',
-      unit: '',
-      unitName: '',
-      weightOrderPlace: '',
-      weightOrderPlaceName: '',
-      makerCd: '',
-      makerName: '',
-      companyDeptCd: '',
-      companyClassCd: '',
-      weightStandardCd: '',
-      weightStandardName: '',
-      deliveryGroup: '',
-      stockType: '',
-      temperatureZone: ''
+    try {
+      const results = await searchProducts(searchForm.value)
+      products.value = results
+      // More logic for pagination, etc.
+      console.log('Products searched:', results.length)
+    } catch (error) {
+      console.error('Error searching products:', error)
     }
   }
 
-  // Setup JAN Code search
-  const searchByJanCd = async (keyword) => {
-    console.log('=== JAN Code search triggered with keyword:', keyword, ' ===')
-    try {
-      console.log('Calling searchJanCodes with keyword:', keyword || '')
-      janCodeList.value = await searchJanCodes(keyword || '')
-      console.log('JAN code list updated with length:', janCodeList.value?.length || 0)
-      console.log('JAN code list updated with data:', janCodeList.value)
+  const resetForm = () => {
+    // Reset search form
+    for (const key in searchForm.value) {
+      searchForm.value[key] = ''
+    }
+    // Clear validation errors
+    clearErrors()
+  }
 
-      // Force UI update
-      setTimeout(() => {
-        console.log('Forced UI update for JAN codes, current list length:', janCodeList.value?.length || 0)
-      }, 100)
+  // Search popup handlers
+  const searchUnit = async (keyword) => {
+    try {
+      unitList.value = await searchUnits(keyword)
+      console.log('Units searched:', unitList.value.length)
     } catch (error) {
-      console.error('Error in searchByJanCd:', error)
-      janCodeList.value = []
+      console.error('Error searching units:', error)
+    }
+  }
+
+  const searchOrderPlace = async (keyword) => {
+    try {
+      weightOrderPlaceList.value = await searchOrderPlaces(keyword)
+      console.log('Order places searched:', weightOrderPlaceList.value.length)
+    } catch (error) {
+      console.error('Error searching order places:', error)
+    }
+  }
+
+  const searchMaker = async (keyword) => {
+    try {
+      makerList.value = await searchMakers(keyword)
+      console.log('Makers searched:', makerList.value.length)
+    } catch (error) {
+      console.error('Error searching makers:', error)
+    }
+  }
+
+  const searchWeightStandard = async (keyword) => {
+    try {
+      weightStandardList.value = await searchWeightStandards(keyword)
+      console.log('Weight standards searched:', weightStandardList.value.length)
+    } catch (error) {
+      console.error('Error searching weight standards:', error)
+    }
+  }
+
+  const searchByJanCd = async (keyword) => {
+    try {
+      janCodeList.value = await searchJanCodes(keyword)
+      console.log('JAN codes searched:', janCodeList.value.length)
+    } catch (error) {
+      console.error('Error searching JAN codes:', error)
     }
   }
 
@@ -182,54 +204,73 @@
   const selectJanCode = (item) => {
     searchForm.value.janCd = item.code
     searchForm.value.janCdName = item.name
+    clearFieldError('janCd')
   }
 
   const selectUnit = (item) => {
     searchForm.value.unit = item.code
     searchForm.value.unitName = item.name
+    clearFieldError('unit')
   }
 
   const selectWeightOrderPlace = (item) => {
     searchForm.value.weightOrderPlace = item.code
     searchForm.value.weightOrderPlaceName = item.name
+    clearFieldError('weightOrderPlace')
   }
 
   const selectMaker = (item) => {
     searchForm.value.makerCd = item.code
     searchForm.value.makerName = item.name
+    clearFieldError('makerCd')
   }
 
   const selectWeightStandard = (item) => {
     searchForm.value.weightStandardCd = item.code
     searchForm.value.weightStandardName = item.name
+    clearFieldError('weightStandardCd')
   }
 
-  // Initialize data
+  // Validation and save function
+  const saveProductHandler = async () => {
+    // Clear previous validation errors
+    clearErrors()
+
+    // Validate form
+    const isValid = validate(searchForm.value, productValidationSchema)
+
+    if (isValid) {
+      try {
+        // Here you would save the product to your database
+        console.log('Product saved successfully:', searchForm.value)
+
+        // Reset form after successful save
+        isEditing.value = false
+        resetForm()
+
+        // Refresh product list
+        await searchProductsHandler()
+      } catch (error) {
+        console.error('Error saving product:', error)
+      }
+    }
+  }
+
   onMounted(async () => {
     console.log('Product Master Component mounted, initializing data...')
     await initDb()
 
-    console.log('Loading initial data for lists...')
-    // Load initial data for all lists
-    unitList.value = await searchUnits('')
-    console.log('Initial unit list:', unitList.value)
+    // Load initial data
+    try {
+      unitList.value = await searchUnits('')
+      weightOrderPlaceList.value = await searchOrderPlaces('')
+      makerList.value = await searchMakers('')
+      weightStandardList.value = await searchWeightStandards('')
 
-    weightOrderPlaceList.value = await searchOrderPlaces('')
-    console.log('Initial weight order place list:', weightOrderPlaceList.value)
-
-    makerList.value = await searchMakers('')
-    console.log('Initial maker list:', makerList.value)
-
-    weightStandardList.value = await searchWeightStandards('')
-    console.log('Initial weight standard list:', weightStandardList.value)
-
-    janCodeList.value = await searchJanCodes('')
-    console.log('Initial JAN code list:', janCodeList.value)
-
-    console.log('Delivery group list (static):', deliveryGroupList.value)
-
-    // Load initial products
-    products.value = await searchProducts()
-    console.log('Initial products:', products.value)
+      // Load initial products
+      await searchProductsHandler()
+    } catch (error) {
+      console.error('Error during initialization:', error)
+    }
   })
 </script>

@@ -1,26 +1,18 @@
-<script>
+<script setup>
   import { useAuthStore } from './modules/auth/store.js'
   import AppHeader from './components/AppHeader.vue'
   import SideMenu from './components/SideMenu.vue'
   import PopupManager from './components/common/PopupManager.vue'
   import { storeToRefs } from 'pinia'
+  import { defineOptions } from 'vue'
 
-  export default {
-    name: 'App',
-    components: {
-      AppHeader,
-      SideMenu,
-      PopupManager
-    },
-    setup() {
-      const authStore = useAuthStore()
-      const { isAuthenticated } = storeToRefs(authStore)
+  // Định nghĩa tên component
+  defineOptions({
+    name: 'App'
+  })
 
-      return {
-        isAuthenticated
-      }
-    }
-  }
+  const authStore = useAuthStore()
+  const { isAuthenticated } = storeToRefs(authStore)
 </script>
 
 <template>

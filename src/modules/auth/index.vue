@@ -9,56 +9,44 @@
   />
 </template>
 
-<script>
-  import { ref } from 'vue'
+<script setup>
+  import { ref, defineOptions } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuthStore } from './store'
   import LoginTemplate from './template.vue'
   import './style.css'
 
-  export default {
-    name: 'LoginView',
-    components: {
-      LoginTemplate
-    },
-    setup() {
-      const username = ref('')
-      const password = ref('')
-      const errorMessage = ref('')
-      const router = useRouter()
-      const authStore = useAuthStore()
+  // Định nghĩa tên component
+  defineOptions({
+    name: 'LoginView'
+  })
 
-      const updateUsername = (value) => {
-        username.value = value
-      }
+  const username = ref('')
+  const password = ref('')
+  const errorMessage = ref('')
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-      const updatePassword = (value) => {
-        password.value = value
-      }
+  const updateUsername = (value) => {
+    username.value = value
+  }
 
-      const handleLogin = async () => {
-        if (!username.value || !password.value) {
-          errorMessage.value = 'ユーザーIDとパスワードを入力してください。'
-          return
-        }
+  const updatePassword = (value) => {
+    password.value = value
+  }
 
-        try {
-          await authStore.login(username.value, password.value)
-          router.push('/')
-        } catch (error) {
-          errorMessage.value = 'ログイン処理中にエラーが発生しました。'
-          console.error(error)
-        }
-      }
+  const handleLogin = async () => {
+    if (!username.value || !password.value) {
+      errorMessage.value = 'ユーザーIDとパスワードを入力してください。'
+      return
+    }
 
-      return {
-        username,
-        password,
-        errorMessage,
-        updateUsername,
-        updatePassword,
-        handleLogin
-      }
+    try {
+      await authStore.login(username.value, password.value)
+      router.push('/')
+    } catch (error) {
+      errorMessage.value = 'ログイン処理中にエラーが発生しました。'
+      console.error(error)
     }
   }
 </script>

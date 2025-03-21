@@ -6,13 +6,15 @@
     :max-width="maxWidth"
     :show-footer="true"
     :show-confirm-button="true"
-    :confirm-text="confirmText"
-    :cancel-text="cancelText"
+    :show-cancel-button="false"
+    :confirm-text="okText"
     @close="close"
-    @confirm="confirm"
-    @cancel="cancel"
+    @confirm="close"
   >
-    <div class="confirm-popup">
+    <div class="error-popup">
+      <div class="error-icon">
+        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+      </div>
       <div class="message">
         <slot>{{ message }}</slot>
       </div>
@@ -23,31 +25,26 @@
 <script setup>
   import BasePopup from './BasePopup.vue'
 
-  // eslint-disable-next-line
-  const props = defineProps({
+  defineProps({
     isOpen: {
       type: Boolean,
       default: false
     },
     title: {
       type: String,
-      default: '確認'
+      default: 'エラー'
     },
     message: {
       type: String,
-      default: ''
+      default: '処理中にエラーが発生しました。入力内容をご確認ください。'
     },
-    confirmText: {
+    okText: {
       type: String,
       default: 'OK'
     },
-    cancelText: {
-      type: String,
-      default: 'キャンセル'
-    },
     width: {
       type: String,
-      default: '400px'
+      default: '450px'
     },
     maxWidth: {
       type: String,
@@ -55,29 +52,29 @@
     }
   })
 
-  const emit = defineEmits(['close', 'confirm', 'cancel'])
+  const emit = defineEmits(['close'])
 
   function close() {
     emit('close')
   }
-
-  function confirm() {
-    emit('confirm')
-  }
-
-  function cancel() {
-    emit('cancel')
-  }
 </script>
 
 <style scoped>
-  .confirm-popup {
+  .error-popup {
     padding: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .error-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
   }
 
   .message {
     text-align: center;
     font-size: 1.1rem;
-    padding: 1rem 0;
+    padding: 0.5rem 0;
   }
 </style>

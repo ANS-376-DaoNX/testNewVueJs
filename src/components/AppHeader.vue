@@ -24,42 +24,37 @@
   </nav>
 </template>
 
-<script>
+<script setup>
   import { useRouter, useRoute } from 'vue-router'
   import { useAuthStore } from '../modules/auth/store.js'
-  import { computed } from 'vue'
+  import { computed, defineOptions } from 'vue'
 
-  export default {
-    name: 'AppHeader',
-    setup() {
-      const router = useRouter()
-      const route = useRoute()
-      const authStore = useAuthStore()
+  // Định nghĩa tên component
+  defineOptions({
+    name: 'AppHeader'
+  })
 
-      const pageTitle = computed(() => {
-        // Xác định tiêu đề dựa trên route hiện tại
-        const path = route.path
-        if (path === '/') {
-          return 'ホームページ'
-        } else if (path.includes('/product-master')) {
-          return '商品マスタ'
-        } else if (path.includes('/customer-product-master')) {
-          return '得意先商品マスタ'
-        } else {
-          return 'ホームページ'
-        }
-      })
+  const router = useRouter()
+  const route = useRoute()
+  const authStore = useAuthStore()
 
-      const logout = () => {
-        authStore.logout()
-        router.push('/login')
-      }
-
-      return {
-        logout,
-        pageTitle
-      }
+  const pageTitle = computed(() => {
+    // Xác định tiêu đề dựa trên route hiện tại
+    const path = route.path
+    if (path === '/') {
+      return 'ホームページ'
+    } else if (path.includes('/product-master')) {
+      return '商品マスタ'
+    } else if (path.includes('/customer-product-master')) {
+      return '得意先商品マスタ'
+    } else {
+      return 'ホームページ'
     }
+  })
+
+  const logout = () => {
+    authStore.logout()
+    router.push('/login')
   }
 </script>
 

@@ -4,7 +4,7 @@
       ref="inputElement"
       type="text"
       class="form-control"
-      :class="{ 'text-end': alignRight }"
+      :class="{ 'text-end': alignRight, 'form-error': error }"
       :value="displayValue"
       @input="handleInput"
       @blur="handleBlur"
@@ -12,6 +12,10 @@
       :placeholder="placeholder"
       :disabled="disabled"
     />
+    <div v-if="error" ref="tooltip" class="error-tooltip">
+      {{ error }}
+      <div class="tooltip-arrow"></div>
+    </div>
   </div>
 </template>
 
@@ -54,6 +58,10 @@
     noRounding: {
       type: Boolean,
       default: true
+    },
+    error: {
+      type: String,
+      default: ''
     }
   })
 
@@ -61,6 +69,7 @@
   const inputElement = ref(null)
   const internalValue = ref(props.modelValue?.toString() || '')
   const focused = ref(false)
+  const tooltip = ref(null)
 
   // Watch for external changes to modelValue
   watch(
@@ -85,39 +94,42 @@
       try {
         let numValue = parseFloat(internalValue.value)
 
-        // If it's a valid number, format it
+        // Return formatted value if valid number, otherwise return original value
         if (!isNaN(numValue)) {
           return formatNumber(numValue)
         }
       } catch (e) {
-        console.error('Error formatting number', e)
+        console.error('Error formatting number:', e)
       }
     }
 
     return internalValue.value
   })
 
-  // Handle input changes
+  // Handle focus event (entering the input)
+  const handleFocus = () => {
+    focused.value = true
+    // Show tooltip if there's an error
+    if (props.error && tooltip.value) {
+      tooltip.value.style.display = 'block'
+    }
+  }
+
+  // Handle input change event
   const handleInput = (e) => {
     const inputValue = e.target.value
     const cursorPosition = e.target.selectionStart
 
-    // Phân tích giá trị nhập vào
-    const parts = inputValue.split('.')
-
-    // KIỂM TRA 1: Nếu có nhiều hơn một dấu thập phân (.)
-    if (props.allowDecimal) {
-      const decimalCount = (inputValue.match(/\./g) || []).length
-      if (decimalCount > 1) {
-        e.target.value = internalValue.value
-        setTimeout(() => {
-          e.target.setSelectionRange(cursorPosition - 1, cursorPosition - 1)
-        }, 0)
-        return
-      }
+    // KIỂM TRA 1: Nếu không cho phép giá trị âm nhưng có dấu trừ
+    if (!props.allowNegative && inputValue.includes('-')) {
+      e.target.value = internalValue.value
+      setTimeout(() => {
+        e.target.setSelectionRange(cursorPosition - 1, cursorPosition - 1)
+      }, 0)
+      return
     }
 
-    // KIỂM TRA 2: Nếu không cho phép số thập phân nhưng có dấu thập phân
+    // KIỂM TRA 2: Nếu không cho phép thập phân nhưng có dấu chấm
     if (!props.allowDecimal && inputValue.includes('.')) {
       e.target.value = internalValue.value
       setTimeout(() => {
@@ -126,14 +138,9 @@
       return
     }
 
-    // Xử lý phần số nguyên
-    let integerPart = parts[0]
-    if (props.allowNegative && integerPart.startsWith('-')) {
-      integerPart = integerPart.substring(1) // Loại bỏ dấu âm khi kiểm tra độ dài
-    }
-
-    // KIỂM TRA 3: Nếu phần số nguyên vượt quá maxLength
-    if (integerPart.length > props.maxLength) {
+    // KIỂM TRA 3: Nếu vượt quá maxLength (trừ đi dấu chấm và dấu trừ)
+    const countableChars = inputValue.replace(/[-.]/g, '')
+    if (countableChars.length > props.maxLength) {
       e.target.value = internalValue.value
       setTimeout(() => {
         e.target.setSelectionRange(cursorPosition - 1, cursorPosition - 1)
@@ -141,18 +148,20 @@
       return
     }
 
-    // Xử lý phần thập phân nếu có
+    // Extract decimal part
+    const parts = inputValue.split('.')
+    let decimalPart = ''
     if (parts.length > 1) {
-      const decimalPart = parts[1]
+      decimalPart = parts[1]
+    }
 
-      // KIỂM TRA 4: Nếu phần thập phân vượt quá decimalPlaces
-      if (decimalPart.length > props.decimalPlaces) {
-        e.target.value = internalValue.value
-        setTimeout(() => {
-          e.target.setSelectionRange(cursorPosition - 1, cursorPosition - 1)
-        }, 0)
-        return
-      }
+    // KIỂM TRA 4: Nếu phần thập phân vượt quá decimalPlaces
+    if (decimalPart.length > props.decimalPlaces) {
+      e.target.value = internalValue.value
+      setTimeout(() => {
+        e.target.setSelectionRange(cursorPosition - 1, cursorPosition - 1)
+      }, 0)
+      return
     }
 
     // KIỂM TRA 5: Kiểm tra tính hợp lệ của chuỗi nhập vào bằng regex
@@ -188,6 +197,11 @@
   const handleBlur = () => {
     focused.value = false
 
+    // Hide tooltip
+    if (tooltip.value) {
+      tooltip.value.style.display = 'none'
+    }
+
     // Format the value when leaving the input
     if (
       internalValue.value &&
@@ -197,57 +211,50 @@
     ) {
       try {
         // Kiểm tra xem phần số nguyên có vượt quá maxLength không
-        const parts = internalValue.value.split('.')
-        let intPart = parts[0]
-        if (props.allowNegative && intPart.startsWith('-')) {
-          intPart = intPart.substring(1)
-        }
-
-        // Nếu phần số nguyên vượt quá maxLength, cắt bớt
-        if (intPart.length > props.maxLength) {
-          // Cắt phần số nguyên để phù hợp với maxLength
-          intPart = intPart.substring(0, props.maxLength)
-
-          // Khôi phục dấu âm nếu cần
-          let newValue = props.allowNegative && internalValue.value.startsWith('-') ? `-${intPart}` : intPart
-
-          // Thêm phần thập phân nếu có
-          if (parts.length > 1 && props.allowDecimal) {
-            newValue += `.${parts[1]}`
-          }
-
-          internalValue.value = newValue
-        }
-
         const numValue = parseFloat(internalValue.value)
         if (!isNaN(numValue)) {
-          if (props.noRounding) {
-            // Không làm tròn số, giữ nguyên giá trị
-            // Nhưng vẫn cần emit để đảm bảo giá trị là số
-            emit('update:modelValue', numValue)
-          } else {
-            // Limit decimal places when losing focus
-            const roundedValue = limitDecimalPlaces(numValue)
-            internalValue.value = roundedValue.toString()
-            emit('update:modelValue', roundedValue)
-          }
+          // Emit giá trị số một lần nữa để đảm bảo đồng bộ
+          emit('update:modelValue', numValue)
         }
       } catch (e) {
-        console.error('Error handling blur', e)
+        console.error('Error during blur handling:', e)
       }
-    } else if (internalValue.value === '.' || internalValue.value === '-.') {
-      // Nếu chỉ có dấu thập phân, xóa bỏ
-      internalValue.value = ''
-      emit('update:modelValue', '')
     }
   }
 
-  // Handle focus event (entering the input)
-  const handleFocus = () => {
-    focused.value = true
+  // Show tooltip on hover
+  const showTooltip = () => {
+    if (props.error && tooltip.value) {
+      tooltip.value.style.display = 'block'
+    }
   }
 
-  // Create regex pattern based on props
+  // Hide tooltip
+  const hideTooltip = () => {
+    if (!focused.value && tooltip.value) {
+      tooltip.value.style.display = 'none'
+    }
+  }
+
+  // Watch for error changes
+  watch(
+    () => props.error,
+    () => {
+      if (tooltip.value) {
+        tooltip.value.style.display = 'none'
+      }
+    }
+  )
+
+  // Add event listeners for hover
+  watch(inputElement, (el) => {
+    if (el) {
+      el.addEventListener('mouseenter', showTooltip)
+      el.addEventListener('mouseleave', hideTooltip)
+    }
+  })
+
+  // Create regex pattern for input validation
   const createInputRegex = () => {
     let pattern = '^'
 
@@ -287,38 +294,65 @@
 
       // Nếu có phần thập phân, giữ nguyên nhưng giới hạn độ dài
       if (parts.length > 1) {
-        // Giới hạn độ dài phần thập phân theo decimalPlaces nhưng không làm tròn
         formattedDecPart = parts[1].substring(0, props.decimalPlaces)
-      } else if (props.allowDecimal) {
-        // Nếu không có phần thập phân, nhưng allowDecimal = true, thêm các số 0
-        formattedDecPart = '0'.repeat(props.decimalPlaces)
       }
     } else {
-      // Làm tròn đến số chữ số thập phân chỉ định
-      const fixedNum = absNum.toFixed(props.decimalPlaces)
-      const parts = fixedNum.split('.')
+      // Làm tròn số đến số chữ số thập phân cần thiết
+      const rounded = absNum.toFixed(props.decimalPlaces)
+      const parts = rounded.split('.')
       formattedIntPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
       formattedDecPart = parts.length > 1 ? parts[1] : ''
     }
 
-    // Kết hợp phần nguyên và phần thập phân
-    return props.allowDecimal && formattedDecPart
-      ? sign + formattedIntPart + '.' + formattedDecPart
-      : sign + formattedIntPart
-  }
-
-  // Limit decimal places to the specified number
-  const limitDecimalPlaces = (num) => {
-    const multiplier = Math.pow(10, props.decimalPlaces)
-    return Math.round(num * multiplier) / multiplier
+    // Kết hợp phần nguyên và phần thập phân (nếu có)
+    if (formattedDecPart) {
+      return `${sign}${formattedIntPart}.${formattedDecPart}`
+    } else {
+      return `${sign}${formattedIntPart}`
+    }
   }
 </script>
 
 <style scoped>
   .number-input-wrapper {
     width: 100%;
+    position: relative;
   }
-  .number-input-wrapper input {
-    font-family: var(--bs-font-monospace, monospace);
+
+  .form-error {
+    border-color: #dc3545;
+    background-image: none;
+  }
+
+  .form-error:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  }
+
+  .error-tooltip {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    z-index: 1000;
+    white-space: nowrap;
+    display: none;
+  }
+
+  .tooltip-arrow {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #dc3545;
   }
 </style>

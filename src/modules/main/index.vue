@@ -4,19 +4,17 @@
   </div>
 </template>
 
-<script>
-  import { useAuthStore } from '../auth/store'
+<script setup>
+  // import { useAuthStore } from '../auth/store'
+  import { defineOptions } from 'vue'
 
-  export default {
-    name: 'MainDashboard',
-    setup() {
-      const authStore = useAuthStore()
+  // Đặt tên component
+  defineOptions({
+    name: 'MainDashboard'
+  })
 
-      return {
-        user: authStore.user
-      }
-    }
-  }
+  // Sử dụng authStore nếu cần trong tương lai
+  // const authStore = useAuthStore()
 </script>
 
 <style scoped>

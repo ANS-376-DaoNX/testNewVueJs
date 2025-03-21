@@ -13,14 +13,23 @@
                   <FormLabel>JANCD</FormLabel>
                 </div>
                 <div class="col-md-4">
-                  <NumberInput
-                    :model-value="searchForm.janCode"
-                    @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, janCode: value })"
-                    placeholder="9090909090909"
-                    :maxLength="13"
-                    :allow-decimal="false"
-                    :allow-negative="false"
-                  />
+                  <div class="input-group">
+                    <SearchInput
+                      :model-value="searchForm.janCode"
+                      @update:model-value="
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, janCode: value })
+                          $emit('clear-field-error', 'janCode')
+                        }
+                      "
+                      :items="janCodeList"
+                      popup-title="JAN検索"
+                      @search="(keyword) => $emit('search-jan-code', keyword)"
+                      @select="(item) => $emit('select-jan-code', item)"
+                      :error="fieldErrors.janCode && fieldErrors.janCode[0]"
+                    />
+                    <input type="text" class="form-control" :value="searchForm.janCodeName" disabled />
+                  </div>
                 </div>
                 <div class="col-md-6"></div>
               </div>
@@ -47,13 +56,17 @@
                     <SearchInput
                       :model-value="searchForm.customerCode"
                       @update:model-value="
-                        (value) => $emit('update:searchForm', { ...searchForm, customerCode: value })
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, customerCode: value })
+                          $emit('clear-field-error', 'customerCode')
+                        }
                       "
                       placeholder="2001"
                       :items="customerList"
                       popup-title="得意先検索"
                       @search="(keyword) => $emit('search-customer', keyword)"
                       @select="(item) => $emit('select-customer', item)"
+                      :error="fieldErrors.customerCode && fieldErrors.customerCode[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.customerName" disabled />
                   </div>
@@ -83,12 +96,16 @@
                     <SearchInput
                       :model-value="searchForm.customerDepartment"
                       @update:model-value="
-                        (value) => $emit('update:searchForm', { ...searchForm, customerDepartment: value })
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, customerDepartment: value })
+                          $emit('clear-field-error', 'customerDepartment')
+                        }
                       "
                       :items="departmentList"
                       popup-title="部門検索"
                       @search="(keyword) => $emit('search-department', keyword)"
                       @select="(item) => $emit('select-department', item)"
+                      :error="fieldErrors.customerDepartment && fieldErrors.customerDepartment[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.departmentName" disabled />
                   </div>
@@ -103,11 +120,17 @@
                   <div class="input-group">
                     <SearchInput
                       :model-value="searchForm.mixCode"
-                      @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, mixCode: value })"
+                      @update:model-value="
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, mixCode: value })
+                          $emit('clear-field-error', 'mixCode')
+                        }
+                      "
                       :items="mixCodeList"
                       popup-title="帳合検索"
                       @search="(keyword) => $emit('search-mix-code', keyword)"
                       @select="(item) => $emit('select-mix-code', item)"
+                      :error="fieldErrors.mixCode && fieldErrors.mixCode[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.mixCodeName" disabled />
                   </div>
@@ -138,11 +161,17 @@
                   <div class="input-group">
                     <SearchInput
                       :model-value="searchForm.orderPlace"
-                      @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, orderPlace: value })"
+                      @update:model-value="
+                        (value) => {
+                          $emit('update:searchForm', { ...searchForm, orderPlace: value })
+                          $emit('clear-field-error', 'orderPlace')
+                        }
+                      "
                       :items="orderPlaceList"
                       popup-title="発注先検索"
                       @search="(keyword) => $emit('search-order-place', keyword)"
                       @select="(item) => $emit('select-order-place', item)"
+                      :error="fieldErrors.orderPlace && fieldErrors.orderPlace[0]"
                     />
                     <input type="text" class="form-control" :value="searchForm.orderPlaceName" disabled />
                   </div>
@@ -208,6 +237,7 @@
                     :allow-decimal="true"
                     :decimal-places="2"
                     :allow-negative="false"
+                    :error="fieldErrors.normalPurchasePrice && fieldErrors.normalPurchasePrice[0]"
                   />
                 </div>
                 <div class="col-md-3">
@@ -220,6 +250,7 @@
                     :allow-decimal="true"
                     :decimal-places="2"
                     :allow-negative="false"
+                    :error="fieldErrors.specialPurchasePrice && fieldErrors.specialPurchasePrice[0]"
                   />
                 </div>
                 <div class="col-md-3">
@@ -367,35 +398,25 @@
                   <FormLabel>出荷表非表示</FormLabel>
                 </div>
                 <div class="col-md-10">
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
+                  <div class="d-flex">
+                    <BaseCheckbox
                       id="nonDisplay"
-                      :checked="searchForm.nonDisplay"
-                      @change="
-                        $emit('update:searchForm', {
-                          ...searchForm,
-                          nonDisplay: $event.target.checked
-                        })
-                      "
+                      label="非表示"
+                      :model-value="searchForm.nonDisplay"
+                      @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, nonDisplay: value })"
+                      :error="fieldErrors.nonDisplay && fieldErrors.nonDisplay[0]"
                     />
-                    <label class="form-check-label" for="nonDisplay">非表示</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="separateDisplay"
-                      :checked="searchForm.separateDisplay"
-                      @change="
-                        $emit('update:searchForm', {
-                          ...searchForm,
-                          separateDisplay: $event.target.checked
-                        })
-                      "
-                    />
-                    <label class="form-check-label" for="separateDisplay">別表示</label>
+                    <div class="ms-4">
+                      <BaseCheckbox
+                        id="separateDisplay"
+                        label="別表示"
+                        :model-value="searchForm.separateDisplay"
+                        @update:model-value="
+                          (value) => $emit('update:searchForm', { ...searchForm, separateDisplay: value })
+                        "
+                        :error="fieldErrors.separateDisplay && fieldErrors.separateDisplay[0]"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -419,50 +440,18 @@
                   <FormLabel>セリ場区分</FormLabel>
                 </div>
                 <div class="col-md-10">
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="auctionPlace"
-                      id="nagaiA"
-                      :checked="searchForm.auctionPlace === '永井A'"
-                      @change="$emit('update:searchForm', { ...searchForm, auctionPlace: '永井A' })"
-                    />
-                    <label class="form-check-label" for="nagaiA">永井正A</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="auctionPlace"
-                      id="nagaiB"
-                      :checked="searchForm.auctionPlace === '永井B'"
-                      @change="$emit('update:searchForm', { ...searchForm, auctionPlace: '永井B' })"
-                    />
-                    <label class="form-check-label" for="nagaiB">永井正B</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="auctionPlace"
-                      id="center"
-                      :checked="searchForm.auctionPlace === 'センター'"
-                      @change="$emit('update:searchForm', { ...searchForm, auctionPlace: 'センター' })"
-                    />
-                    <label class="form-check-label" for="center">センター(昼市)</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="auctionPlace"
-                      id="none"
-                      :checked="searchForm.auctionPlace === 'なし'"
-                      @change="$emit('update:searchForm', { ...searchForm, auctionPlace: 'なし' })"
-                    />
-                    <label class="form-check-label" for="none">なし</label>
-                  </div>
+                  <RadioGroup
+                    :model-value="searchForm.auctionPlace"
+                    name="auctionPlace"
+                    :options="[
+                      { value: '永井A', label: '永井正A' },
+                      { value: '永井B', label: '永井正B' },
+                      { value: 'センター', label: 'センター(昼市)' },
+                      { value: 'なし', label: 'なし' }
+                    ]"
+                    :error="fieldErrors.auctionPlace && fieldErrors.auctionPlace[0]"
+                    @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, auctionPlace: value })"
+                  />
                 </div>
               </div>
 
@@ -471,21 +460,13 @@
                   <FormLabel>終売区分</FormLabel>
                 </div>
                 <div class="col-md-10">
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="discontinued"
-                      :checked="searchForm.discontinued"
-                      @change="
-                        $emit('update:searchForm', {
-                          ...searchForm,
-                          discontinued: $event.target.checked
-                        })
-                      "
-                    />
-                    <label class="form-check-label" for="discontinued">終売</label>
-                  </div>
+                  <BaseCheckbox
+                    id="discontinued"
+                    label="終売"
+                    :model-value="searchForm.discontinued"
+                    @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, discontinued: value })"
+                    :error="fieldErrors.discontinued && fieldErrors.discontinued[0]"
+                  />
                 </div>
               </div>
 
@@ -494,21 +475,15 @@
                   <FormLabel>軽減税率</FormLabel>
                 </div>
                 <div class="col-md-10">
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="reducedTaxRate"
-                      :checked="searchForm.reducedTaxRate"
-                      @change="
-                        $emit('update:searchForm', {
-                          ...searchForm,
-                          reducedTaxRate: $event.target.checked
-                        })
-                      "
-                    />
-                    <label class="form-check-label" for="reducedTaxRate">適用</label>
-                  </div>
+                  <BaseCheckbox
+                    id="reducedTaxRate"
+                    label="適用"
+                    :model-value="searchForm.reducedTaxRate"
+                    @update:model-value="
+                      (value) => $emit('update:searchForm', { ...searchForm, reducedTaxRate: value })
+                    "
+                    :error="fieldErrors.reducedTaxRate && fieldErrors.reducedTaxRate[0]"
+                  />
                 </div>
               </div>
 
@@ -517,30 +492,22 @@
                   <FormLabel>在庫商品</FormLabel>
                 </div>
                 <div class="col-md-10">
-                  <div class="form-check form-check-inline">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="stockItem"
-                      :checked="searchForm.stockItem"
-                      @change="
-                        $emit('update:searchForm', {
-                          ...searchForm,
-                          stockItem: $event.target.checked
-                        })
-                      "
-                    />
-                    <label class="form-check-label" for="stockItem">在庫</label>
-                  </div>
+                  <BaseCheckbox
+                    id="stockItem"
+                    label="在庫"
+                    :model-value="searchForm.stockItem"
+                    @update:model-value="(value) => $emit('update:searchForm', { ...searchForm, stockItem: value })"
+                    :error="fieldErrors.stockItem && fieldErrors.stockItem[0]"
+                  />
                 </div>
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button class="btn btn-primary me-2" @click="$emit('search-products')">
+                <button class="btn btn-primary me-2" @click="$emit('save-product')">
                   <i class="bi bi-save me-1"></i>登録
                 </button>
                 <button class="btn btn-secondary" @click="$emit('reset-form')">
-                  <i class="bi bi-x-circle me-1"></i>CLOSE
+                  <i class="bi bi-x-circle me-1"></i>クリア
                 </button>
               </div>
             </div>
@@ -556,6 +523,8 @@
   import SearchInput from '@/components/common/SearchInput.vue'
   import FormLabel from '@/components/common/FormLabel.vue'
   import NumberInput from '@/components/common/NumberInput.vue'
+  import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
+  import RadioGroup from '@/components/common/RadioGroup.vue'
 
   defineProps({
     searchForm: {
@@ -606,6 +575,10 @@
     janCodeList: {
       type: Array,
       default: () => []
+    },
+    fieldErrors: {
+      type: Object,
+      default: () => ({})
     }
   })
 
@@ -626,6 +599,9 @@
     'search-mix-code',
     'select-mix-code',
     'search-order-place',
-    'select-order-place'
+    'select-order-place',
+    'search-jan-code',
+    'select-jan-code',
+    'clear-field-error'
   ])
 </script>
