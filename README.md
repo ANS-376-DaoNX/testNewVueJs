@@ -82,8 +82,11 @@ npm run format
 
 ## Project Structure
 
-- `src/modules/`: Contains feature modules (auth, product, customer, main)
-  - Each module has its own components, store, and styles
+- `src/modules/`: Contains feature modules:
+  - `auth/`: Authentication and user management
+  - `product/`: Product master management
+  - `customer/`: Customer product management
+  - `main/`: Main application layout and dashboard
 - `src/router/`: Contains the Vue Router configuration with auth guards
 - `src/db/`: Contains the lowdb database configuration and initial data
 - `src/services/`: Contains API and service layer
@@ -91,6 +94,8 @@ npm run format
 - `src/components/`: Contains shared components
 - `src/assets/`: Contains global CSS and other assets
 - `src/styles/`: Contains global styles
+- `src/composables/`: Contains reusable composition functions
+- `src/utils/`: Contains utility functions
 
 ## Database
 
@@ -103,10 +108,14 @@ The application uses lowdb with a LocalStorageAdapter to persist data in the bro
 
 ## Tech Stack
 
-- Vue.js 3.5 with Composition API
+- Vue.js 3.5
 - Vue Router 4.5
 - Pinia 3.0
 - Bootstrap 5.3 with Bootstrap Icons
+- Axios 1.8
+- lowdb 7.0
 - Vite 6.1
-- ESLint 9
+- ESLint 9.20
 - Prettier 3.5
+- Vitest 3.0
+- Playwright 1.50
