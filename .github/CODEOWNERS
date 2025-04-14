@@ -1,0 +1,11 @@
+# Code Owners for all repository
+*       @ANS-376-DaoNX
+
+# folder
+src/    @ANS-376-DaoNX
+
+# docs
+docs/   @ANS-376-DaoNX
+
+# Tệp README.md
+README.md @ANS-376-DaoNX
